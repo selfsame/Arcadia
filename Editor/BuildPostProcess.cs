@@ -123,8 +123,12 @@ namespace Arcadia
 					" -signedjar " + signedApk +
 					" -keypass " + keyaliasPass +
 					" " + pathToBuiltProject + " " + keyaliasName;
-				Process.Start(jarsignerPath, jarsignerArgs);
-
+				ProcessStartInfo startInfo = new ProcessStartInfo(jarsignerPath, jarsignerArgs);
+				startInfo.UseShellExecute = false;
+				startInfo.RedirectStandardError = true;
+				Process jsign = Process.Start(startInfo);
+				UnityEngine.Debug.Log(keystorePath+"\n"+keystorePass+"\n"+keyaliasName+"\n"+keyaliasPass);
+				UnityEngine.Debug.Log(jsign.StandardError.ReadToEnd());
 				// zipalign
 				Progress("Arcadia : Android", "Zip Aligning APK");
 				var AndroidSDKTools = System.Type.GetType("UnityEditor.Android.AndroidSDKTools, UnityEditor.Android.Extensions");
@@ -133,13 +137,19 @@ namespace Arcadia
 				var zipalignProperty = AndroidSDKTools.GetProperty("ZIPALIGN");
 				var zipalignPath = (string)zipalignProperty.GetValue(androidSDKToolsInstance, null);
 				var zipalignArgs = "-f -v 4 " + signedApk + " " + alignedApk;
-				Process.Start(zipalignPath, zipalignArgs);
+				UnityEngine.Debug.Log(zipalignPath);
+				ProcessStartInfo startInfo2 = new ProcessStartInfo(zipalignPath, zipalignArgs);
+				startInfo2.UseShellExecute = false;
+				startInfo2.RedirectStandardError = true;
+				Process zalign = Process.Start(startInfo2);
+				UnityEngine.Debug.Log(zalign.StandardError.ReadToEnd());
 
 				Progress("Arcadia : Android", "Cleaning Up");
-				// File.Delete(signedApk);
-				// File.Delete(pathToBuiltProject);
-				// File.Move(alignedApk, pathToBuiltProject);
-				// Directory.Delete(targetPath, true);
+				//File.Delete(signedApk);
+				//File.Delete(pathToBuiltProject);
+				File.Move(pathToBuiltProject, pathToBuiltProject+"-original");
+				File.Move(alignedApk, pathToBuiltProject);
+				Directory.Delete(targetPath, true);
 			}
 			else {
 				EditorUtility.DisplayDialog(
